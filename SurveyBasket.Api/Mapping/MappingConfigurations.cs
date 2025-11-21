@@ -1,11 +1,13 @@
-﻿namespace SurveyBasket.Api.Mapping
+﻿using SurveyBasket.Api.Contracts.Polls;
+
+namespace SurveyBasket.Api.Mapping
 {
     public class MappingConfigurations : IRegister
     {
         public void Register(TypeAdapterConfig config)
         {
             config.NewConfig<Poll, PollResponse>()
-                .Map(dest => dest.Description, src => src.Description);
+                .Map(dest => dest.Summary, src => src.Summary);
         }
     }
 }
