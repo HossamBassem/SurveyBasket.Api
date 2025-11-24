@@ -1,5 +1,7 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 
 namespace SurveyBasket.Api.Controllers
 {
@@ -8,6 +10,7 @@ namespace SurveyBasket.Api.Controllers
     public class AuthController(IAuthService authService) : ControllerBase
     {
         private readonly IAuthService _authService = authService;
+        
 
         [HttpPost("")]
         public async Task<IActionResult> LoginAsync(LoginRequest request,CancellationToken cancellationToken) {
@@ -17,5 +20,6 @@ namespace SurveyBasket.Api.Controllers
             return authResult is null ? Unauthorized("Invalid email/password") : Ok(authResult);
         }
 
+        
     }
 }

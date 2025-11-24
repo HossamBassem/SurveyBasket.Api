@@ -22,7 +22,7 @@ namespace SurveyBasket.Api
             //add connection to database
             services.AddConnectionToDB(configuration);
             //Add Auth Services
-            services.AddAuthServices();
+            services.AddAuthServices(configuration);
 
 
             // Learn more about configuring Swagger
@@ -77,13 +77,24 @@ namespace SurveyBasket.Api
 
             return services;
         }
-        private static IServiceCollection AddAuthServices(this IServiceCollection services)
+        private static IServiceCollection AddAuthServices(this IServiceCollection services,IConfiguration configuration)
         {
             services.AddSingleton<IJwtProvider, JwtProvider>();
+            // Configure JWT Options
+            
+            services.AddOptions<JwtOptions>()
+                .Bind(configuration.GetSection(JwtOptions.SectionName))
+                .ValidateDataAnnotations()
+                .ValidateOnStart();
 
+            // Bind JwtOptions for direct use
+            var jwtSettings = configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>();
+
+            // Add Identity
             services.AddIdentity<ApplicationUser, IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>();
 
+            // Configure Authentication
             services.AddAuthentication(options =>
             {
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -99,9 +110,9 @@ namespace SurveyBasket.Api
                         ValidateAudience = true,
                         ValidateLifetime = true,
                         ValidateIssuerSigningKey = true,
-                        ValidIssuer = "SurveyBasket.Api",
-                        ValidAudience = "SurveyBasket.Api users",
-                        IssuerSigningKey = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes("3d42bb71f735dd74")),
+                        ValidIssuer = jwtSettings?.Issuer,
+                        ValidAudience = jwtSettings?.Audience,
+                        IssuerSigningKey = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(jwtSettings?.Key!)),
                         
                     };
                 }

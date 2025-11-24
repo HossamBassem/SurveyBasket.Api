@@ -2,12 +2,16 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
 namespace SurveyBasket.Api.Authentication
 {
-    public class JwtProvider : IJwtProvider
+    public class JwtProvider(IOptions<JwtOptions> options) : IJwtProvider
     {
+        
+        private readonly JwtOptions _options = options.Value;
+
         public (string token, int expiresIn) GenerateToken(ApplicationUser user)
         {
             Claim[] claims = [
@@ -17,14 +21,15 @@ namespace SurveyBasket.Api.Authentication
                 new Claim(JwtRegisteredClaimNames.FamilyName, user.LastName ?? string.Empty),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
                 ];
-            var symmetricSecurityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("3d42bb71f735dd74"));
+           
+            var symmetricSecurityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_options.Key));
             var signingCredentials = new SigningCredentials(symmetricSecurityKey, SecurityAlgorithms.HmacSha256);
-            var expiresIn = 60; // minutes
+            var expiresIn = _options.ExpiryMinutes; // minutes
             var expiration = DateTime.UtcNow.AddMinutes(expiresIn);
 
             var jwtSecurityToken = new JwtSecurityToken(
-                issuer: "SurveyBasket.Api",
-                audience: "SurveyBasket.Api users",
+                issuer: _options.Issuer,
+                audience: _options.Audience,
                 claims: claims,
                 expires: expiration,
                 signingCredentials: signingCredentials
